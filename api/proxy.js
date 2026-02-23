@@ -1,5 +1,5 @@
 export default async (req, res) => {
-  // Handle CORS preflight (OPTIONS request)
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -7,24 +7,27 @@ export default async (req, res) => {
     return res.status(200).end();
   }
 
-  const targetBase = 'https://script.google.com/macros/s/AKfycbwUFXT4bp2yO7HbGsnmMm7OavUCq3vOXhzoL3MDgJxdDmqcGwoZoVnrO2tJRg0sMA05gw/exec';
-  
-  // Build target URL: base + original query string (req.url includes query)
-  const targetUrl = targetBase + (req.url || '');
+  // Your actual Apps Script URL (replace with your real one)
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUFXT4bp2yO7HbGsnmMm7OavUCq3vOXhzoL3MDgJxdDmqcGwoZoVnrO2tJRg0sMA05gw/exec';
+
+  // Build query string from req.query (Vercel automatically parses it)
+  const queryString = Object.keys(req.query)
+    .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(req.query[key])}`)
+    .join('&');
+
+  // Construct the full target URL
+  const targetUrl = queryString ? `${APPS_SCRIPT_URL}?${queryString}` : APPS_SCRIPT_URL;
 
   try {
-    // Prepare fetch options
     const fetchOptions = {
       method: req.method,
       headers: {
-        // Only forward essential headers
         'Content-Type': req.headers['content-type'] || 'application/json',
       },
     };
 
-    // Handle body for POST/PUT methods
+    // Handle request body for POST/PUT
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-      // If body is already an object, stringify it; otherwise, use as-is
       let bodyData = req.body;
       if (req.headers['content-type']?.includes('application/json')) {
         bodyData = typeof req.body === 'object' ? JSON.stringify(req.body) : req.body;
@@ -35,7 +38,7 @@ export default async (req, res) => {
     // Forward the request to Apps Script
     const response = await fetch(targetUrl, fetchOptions);
 
-    // Get response data (could be JSON or text)
+    // Parse response
     let data;
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
@@ -49,13 +52,10 @@ export default async (req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-    // Forward the status code from Apps Script
+    // Return the response with the same status code
     return res.status(response.status).json(data);
   } catch (error) {
-    // Log the error (visible in Vercel logs)
     console.error('Proxy error:', error);
-
-    // Return a clean 500 response
     res.setHeader('Access-Control-Allow-Origin', '*');
     return res.status(500).json({
       success: false,
