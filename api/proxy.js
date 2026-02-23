@@ -8,7 +8,7 @@ export default async (req, res) => {
   }
 
   // Your actual Apps Script URL (replace with your real one)
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUFXT4bp2yO7HbGsnmMm7OavUCq3vOXhzoL3MDgJxdDmqcGwoZoVnrO2tJRg0sMA05gw/exec';
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-Nob48SP4YtXpLLsoPlPHcTK8QOlM9oZbuHYfmgaVI5MWD4NEa2w8v4xOUvVoF0rp/exec';
 
   // Build query string from req.query (Vercel automatically parses it)
   const queryString = Object.keys(req.query)
